@@ -1,5 +1,5 @@
 # Désactive l'antivirus pour compiler:
-# pyinstaller calculatrice.py --noconsole --hidden-import=tkinter --hidden-import=regex --onefile
+# pyinstaller calculatrice.py --noconsole --hidden-import=tkinter --hidden-import=regex
 import tkinter as tk
 import re
 
@@ -41,7 +41,7 @@ class MagicCalculator(tk.Tk):
             highlightbackground='#2b2b2b',
             bd=3,
             relief='flat',
-            font=('Consolas', 12)
+            font=('Consolas', 13)
         )
 
         # Lier l'événement FocusIn pour revenir à la zone de texte
@@ -54,7 +54,8 @@ class MagicCalculator(tk.Tk):
 
         self.results = []
         self.formulas = []
-
+        # version précédente de la zone de texte pour comparer avec la courante lors de suppressions de lignes
+        self.previous_text = []
 
     def return_focus(self, event):
         self.text_area.focus_set()
@@ -71,6 +72,39 @@ class MagicCalculator(tk.Tk):
         line_end_index = f"{line_number + 1}.end"
         lines_after_cursor = self.text_area.get(cursor_index, "end-1c")
         
+        current_text = self.text_area.get("1.0", tk.END).splitlines()
+        
+        # gère la suppression des lignes
+        curent_id = 0
+        changed_lines = {} #index, text, restult
+
+        for i, old_line in enumerate(self.previous_text):
+            if i < len(current_text):
+                if old_line == current_text[curent_id]:
+                    # ligne identique. rien à faire
+                    curent_id += 1
+                    continue
+                else:
+                    # ligne différente. donc la ligne a été supprimée / changée
+                    # on vérifie les autres lignes jusque à la fin pour voir combien ont été supprimées
+                    remaining_lines = current_text[i:]
+                    removed_lines = 0
+                    for j, line in enumerate(remaining_lines):
+                        if curent_id+j < len(current_text):
+                            if old_line == current_text[curent_id+j]:
+                                # la ligne a été supprimée. on la marque de coté
+                                changed_lines[i] = {"index" : i, "text" : old_line, "result": self.results[i]}
+                                
+                                removed_lines += 1 
+                    else:
+                        curent_id += 1
+                        continue
+            else:
+                changed_lines[i] = {"index" : i, "text" : old_line, "result": self.results[i]}
+        
+        print(changed_lines)
+
+
         # Obtenir le texte complet de la ligne
         line_text = self.text_area.get(line_start_index, line_end_index).strip()
 
@@ -137,6 +171,9 @@ class MagicCalculator(tk.Tk):
                 # Mettre à jour la liste des résultats
                 self.update_results_list()
                 self.update_cascade(0)
+
+        # self.text_area attend un id "i.0".
+        self.previous_text = self.text_area.get("1.0", tk.END).splitlines()
 
         # Réactiver l'événement <<Modified>>
         self.text_area.bind('<<Modified>>', self.on_text_change)
