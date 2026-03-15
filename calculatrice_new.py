@@ -1,6 +1,4 @@
-# Désactive l'antivirus pour compiler:
-# pyinstaller calculatrice.py --noconsole --hidden-import=tkinter --hidden-import=regex
-
+# "C:/Program Files/Python38/python.exe" -m PyInstaller --noconfirm --clean --windowed --onefile --name Calculatrice calculatrice_new.py
 import ast
 import math
 import re
@@ -357,7 +355,6 @@ class MagicCalculator(tk.Tk):
     def _bind_events(self):
         self.text_area.bind("<KeyRelease>", self.on_key_release)
         self.text_area.bind("<Return>", self.on_return_pressed)
-        self.result_list.bind("<Button-1>", self.on_result_selected)
         self.result_list.bind("<FocusIn>", self.return_focus)
         self.header_title.bind("<FocusIn>", self._on_title_focus)
         self.header_title.bind("<KeyRelease>", self._resize_title_entry)
@@ -574,10 +571,7 @@ class MagicCalculator(tk.Tk):
         self.schedule_recalc()
 
     def on_result_selected(self, event=None):
-        index_text = self.result_list.index(f"@{event.x},{event.y}")
-        line_number = int(index_text.split(".")[0]) - 1
-        if 0 <= line_number < len(self.display_line_indices):
-            self.insert_ans_reference(self.display_line_indices[line_number])
+        return "break"
 
     def colorize_text(self):
         for tag in ("operator", "function", "paren", "comment", "ans", "error_line"):
